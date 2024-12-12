@@ -1,7 +1,7 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { OpenFgaClient, CredentialsMethod, TupleKey } from '@openfga/sdk';
 import { ConfigService } from '@nestjs/config';
-import { AuthorizationPartyTypes } from './authorization-party-types.enum';
+import { AuthorizationPartyTypes } from './authorization-types.enum';
 import { AuthorizationRelationships } from './authorization-relationships.enum';
 import { AuthorizationParty } from './authorization-party';
 

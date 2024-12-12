@@ -1,21 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
-export interface Project {
-  id: string;
-  name: string;
-  organizationId: string;
-  // Add other fields as needed
-}
+import { ProjectDto } from './dto/project.dto';
+import { Project, ProjectDocument } from './schemas/project.schema';
 
 @Injectable()
 export class ProjectsService {
   constructor(
-    @InjectModel('Project') private projectModel: Model<Project>,
+    @InjectModel(Project.name) private projectModel: Model<ProjectDocument>,
   ) { }
 
-  async findOne(id: string): Promise<Project> {
+  async findOne(id: string): Promise<ProjectDocument> {
     const project = await this.projectModel.findById(id).exec();
     if (!project) {
       throw new NotFoundException(`Project with ID ${id} not found`);
@@ -23,12 +18,12 @@ export class ProjectsService {
     return project;
   }
 
-  async create(createProjectDto: any): Promise<Project> {
+  async create(createProjectDto: any): Promise<ProjectDocument> {
     const createdProject = new this.projectModel(createProjectDto);
     return createdProject.save();
   }
 
-  async findAll(allowedProjectIds: string[]): Promise<Project[]> {
+  async findAll(allowedProjectIds: string[]): Promise<ProjectDocument[]> {
     return this.projectModel.find({ _id: { $in: allowedProjectIds } }).exec();
   }
 }

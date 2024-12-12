@@ -1,4 +1,4 @@
-import { AuthorizationPartyTypes } from "./authorization-party-types.enum";
+import { AuthorizationPartyTypes } from "./authorization-types.enum";
 
 export class AuthorizationParty {
   type: AuthorizationPartyTypes;

@@ -1,5 +1,17 @@
-import { Schema } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document, HydratedDocument } from "mongoose";
 
-export const ProjectSchema = new Schema({
-  name: { type: String, required: true },
-});
+export type ProjectDocument = HydratedDocument<Project>;
+
+@Schema({
+  toObject: {
+    virtuals: true,
+  },
+})
+export class Project {
+
+  @Prop({ required: true })
+  name: string;
+}
+
+export const ProjectSchema = SchemaFactory.createForClass(Project);
