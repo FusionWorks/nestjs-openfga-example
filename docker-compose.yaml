@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-data:/data/db
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: openfga
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  openfga:
+    image: openfga/openfga:latest
+    container_name: openfga
+    ports:
+      - "8080:8080"
+    environment:
+      OPENFGA_DATASTORE_ENGINE: postgres
+      OPENFGA_AUTH_METHOD: none
+      OPENFGA_DATASTORE_URI: postgres://postgres:example@postgres:5432/openfga
+
+volumes:
+  mongo-data:  
+  postgres-data:
