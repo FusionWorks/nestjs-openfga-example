@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ProjectDto } from './dto/project.dto';
 import { Project, ProjectDocument } from './schemas/project.schema';
+import { CreateProjectDto } from './dto/create-project.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -18,7 +18,7 @@ export class ProjectsService {
     return project;
   }
 
-  async create(createProjectDto: any): Promise<ProjectDocument> {
+  async create(createProjectDto: CreateProjectDto): Promise<ProjectDocument> {
     const createdProject = new this.projectModel(createProjectDto);
     return createdProject.save();
   }

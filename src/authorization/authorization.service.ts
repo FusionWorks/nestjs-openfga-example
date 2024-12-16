@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable, ForbiddenException, Logger } from '@nestjs/common';
 import { OpenFgaClient, CredentialsMethod, TupleKey } from '@openfga/sdk';
 import { ConfigService } from '@nestjs/config';
 import { AuthorizationPartyTypes } from './authorization-types.enum';
@@ -7,6 +7,9 @@ import { AuthorizationParty } from './authorization-party';
 
 @Injectable()
 export class AuthorizationService {
+
+  private readonly logger = new Logger(AuthorizationService.name);
+
   private client: OpenFgaClient;
 
   constructor(private readonly configService: ConfigService) {
@@ -53,6 +56,47 @@ export class AuthorizationService {
     return response.objects.map((object) => object.split(':')[1]);
   }
 
+  async listUsers(object: AuthorizationParty): Promise<{ userId: string; relations: string[] }[]> {
+    const relations = [
+      AuthorizationRelationships.MEMBER,
+      AuthorizationRelationships.OWNER,
+      AuthorizationRelationships.ADMIN
+    ];
+
+    const responses = await Promise.all(
+      relations.map(async (relation) => {
+        const response = await this.client.listUsers({
+          object: object.toOpenFgaObject(),
+          relation,
+          user_filters: [
+            {
+              type: AuthorizationPartyTypes.USER,
+            },
+          ],
+        });
+        return { relation, users: response.users };
+      })
+    );
+
+    const userRolesMap = responses.reduce((acc, { relation, users }) => {
+      users.forEach(user => {
+        const userId = user.object.id;
+        if (!acc[userId]) {
+          acc[userId] = new Set<string>();
+        }
+        acc[userId].add(relation);
+      });
+      return acc;
+    }, {} as Record<string, Set<string>>);
+
+    const aggregatedUsers = Object.entries(userRolesMap).map(([userId, rolesSet]) => ({
+      userId,
+      relations: Array.from(rolesSet),
+    }));
+
+    return aggregatedUsers;
+  }
+
   async addRelationship(user: AuthorizationParty, object: AuthorizationParty, relationship: AuthorizationRelationships): Promise<void> {
     const tupleKey: TupleKey = {
       user: user.toOpenFgaString(),
@@ -60,14 +104,9 @@ export class AuthorizationService {
       object: object.toOpenFgaString(),
     };
 
-    try {
-      const response = await this.client.write({
-        writes: [tupleKey],
-      });
-      console.log('OpenFGA write response:', response);
-    } catch (error) {
-      throw new ForbiddenException(`Failed to assign ${relationship} to the ${user.toOpenFgaString()} on ${object.toOpenFgaString()}.`);
-    }
+    await this.client.write({
+      writes: [tupleKey],
+    });
   }
 
   async removeRelationship(user: AuthorizationParty, object: AuthorizationParty, relationship: AuthorizationRelationships): Promise<void> {
@@ -77,43 +116,9 @@ export class AuthorizationService {
       object: object.toOpenFgaString(),
     };
 
-    try {
-      await this.client.write({
-        deletes: [tupleKey],
-      });
-    } catch (error) {
-      throw new ForbiddenException(`Failed to assign ${relationship} to the ${user.toOpenFgaString()} on ${object.toOpenFgaString()}.`);
-    }
-  }
-
-  async removeObject(object: AuthorizationParty): Promise<void> {
-    const tupleKey: TupleKey = {
-      user: '*',
-      relation: '*',
-      object: `${object.toOpenFgaString()}`,
-    };
-    try {
-      await this.client.write({
-        deletes: [tupleKey],
-      });
-    } catch (error) {
-      throw new ForbiddenException(`Failed to remove object ${object.toOpenFgaString()}.`);
-    }
-  }
-
-  async removeUser(user: AuthorizationParty): Promise<void> {
-    const tupleKey: TupleKey = {
-      user: `${user.toOpenFgaString()}`,
-      relation: '*',
-      object: '*',
-    };
-    try {
-      await this.client.write({
-        deletes: [tupleKey],
-      });
-    } catch (error) {
-      throw new ForbiddenException(`Failed to remove user ${user.toOpenFgaString()}.`);
-    }
+    await this.client.write({
+      deletes: [tupleKey],
+    });
   }
 
 }

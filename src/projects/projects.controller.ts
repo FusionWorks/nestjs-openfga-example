@@ -1,4 +1,3 @@
-// src/projects/projects.controller.ts
 import {
   Controller,
   Get,
@@ -24,6 +23,7 @@ import { AddProjectMemberDto } from './dto/add-project-member.dto';
 import { DeleteProjectMemberDto } from './dto/delete-project-member.dto';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { ProjectDto } from './dto/project.dto';
+import { MemberDto } from './dto/member.dto';
 
 @ApiBearerAuth('Auth0')
 @Controller('projects')
@@ -88,6 +88,31 @@ export class ProjectsController {
   }
 
   /**
+   * List all members of a project.
+   */
+  @Get(':id/members')
+  @ApiOkResponse({ type: String, isArray: true })
+  @Permissions({
+    permission: AuthorizationRelationships.MEMBER,
+    objectType: AuthorizationPartyTypes.PROJECT,
+    objectIdParam: 'id',
+  })
+  async listMembers(@Param('id') projectId: string): Promise<MemberDto[]> {
+    const project = new AuthorizationParty(
+      AuthorizationPartyTypes.PROJECT,
+      projectId,
+    );
+    return (await this.authorizationService.listUsers(project)).map(
+      (user) => {
+        return {
+          userId: user.userId,
+          roles: user.relations.map((role) => role.toString()),
+        }
+      }
+    );
+  }
+
+  /**
    * Assign a member to a project.
    * Requires 'admin' permission on the project.
    */
@@ -97,7 +122,7 @@ export class ProjectsController {
     objectType: AuthorizationPartyTypes.PROJECT,
     objectIdParam: 'id',
   })
-  async assignDeveloper(
+  async addMember(
     @Param('id') projectId: string,
     @Body() addMemberDto: AddProjectMemberDto,
   ) {
@@ -110,7 +135,7 @@ export class ProjectsController {
     );
 
     await this.authorizationService.addRelationship(user, project, role);
-    return { message: 'Member assigned successfully.' };
+    return { message: 'Ok' };
   }
 
   /**
@@ -123,7 +148,7 @@ export class ProjectsController {
     objectType: AuthorizationPartyTypes.PROJECT,
     objectIdParam: 'id',
   })
-  async removeDeveloper(
+  async removeMember(
     @Param('id') projectId: string,
     @Body() deleteMemberDto: DeleteProjectMemberDto,
   ) {
@@ -135,8 +160,8 @@ export class ProjectsController {
       projectId,
     );
 
-    await this.authorizationService.addRelationship(user, project, AuthorizationRelationships.ANY);
-    return { message: 'Developer assigned successfully.' };
+    await this.authorizationService.removeRelationship(user, project, deleteMemberDto.role);
+    return { message: 'Ok' };
   }
 
 }

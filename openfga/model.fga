@@ -1,0 +1,10 @@
+model
+  schema 1.1
+
+type user
+
+type project
+  relations
+    define admin: [user] or owner
+    define member: [user] or admin or owner
+    define owner: [user]

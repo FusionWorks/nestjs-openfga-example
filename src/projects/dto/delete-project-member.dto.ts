@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsUUID } from 'class-validator';
+import { IsEnum, IsNotEmpty } from 'class-validator';
+import { AuthorizationRelationships } from 'src/authorization/authorization-relationships.enum';
 
 export class DeleteProjectMemberDto {
 
@@ -9,4 +10,16 @@ export class DeleteProjectMemberDto {
   })
   @IsNotEmpty()
   userId: string;
+
+  @ApiProperty(
+    {
+      description: 'The role of the user in the project.',
+      example: 'member',
+      enum: AuthorizationRelationships,
+    },
+  )
+  @IsNotEmpty()
+  @IsEnum(AuthorizationRelationships)
+  readonly role: AuthorizationRelationships;
+
 }

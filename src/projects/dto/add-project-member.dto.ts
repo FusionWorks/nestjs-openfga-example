@@ -16,12 +16,11 @@ export class AddProjectMemberDto {
   @ApiProperty(
     {
       description: 'The role of the user in the project.',
-      example: 'MEMBER',
+      example: 'member',
       enum: AuthorizationRelationships,
     },
   )
   @IsNotEmpty()
-  @IsString()
   @IsEnum(AuthorizationRelationships)
   readonly role: AuthorizationRelationships;
 }

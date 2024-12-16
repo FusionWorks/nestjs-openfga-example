@@ -1,3 +1,4 @@
+import { FgaObject } from "@openfga/sdk";
 import { AuthorizationPartyTypes } from "./authorization-types.enum";
 
 export class AuthorizationParty {
@@ -11,5 +12,9 @@ export class AuthorizationParty {
 
   toOpenFgaString(): string {
     return `${this.type}:${this.id}`;
+  }
+
+  toOpenFgaObject(): FgaObject {
+    return { type: this.type, id: this.id };
   }
 }
