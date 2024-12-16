@@ -1,4 +1,4 @@
-export enum AuthorizationRelationships {
+export enum AuthorizationRelations {
   ANY = '*',
   OWNER = 'owner',
   ADMIN = 'admin',

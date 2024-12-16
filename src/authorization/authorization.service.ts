@@ -2,7 +2,7 @@ import { Injectable, ForbiddenException, Logger } from '@nestjs/common';
 import { OpenFgaClient, CredentialsMethod, TupleKey } from '@openfga/sdk';
 import { ConfigService } from '@nestjs/config';
 import { AuthorizationPartyTypes } from './authorization-types.enum';
-import { AuthorizationRelationships } from './authorization-relationships.enum';
+import { AuthorizationRelations } from './authorization-relations.enum';
 import { AuthorizationParty } from './authorization-party';
 
 @Injectable()
@@ -46,7 +46,7 @@ export class AuthorizationService {
     }
   }
 
-  async listObjectIds(user: AuthorizationParty, objectType: AuthorizationPartyTypes, relation: AuthorizationRelationships): Promise<string[]> {
+  async listObjectIds(user: AuthorizationParty, objectType: AuthorizationPartyTypes, relation: AuthorizationRelations): Promise<string[]> {
     const request = {
       user: user.toOpenFgaString(),
       relation,
@@ -56,12 +56,7 @@ export class AuthorizationService {
     return response.objects.map((object) => object.split(':')[1]);
   }
 
-  async listUsers(object: AuthorizationParty): Promise<{ userId: string; relations: string[] }[]> {
-    const relations = [
-      AuthorizationRelationships.MEMBER,
-      AuthorizationRelationships.OWNER,
-      AuthorizationRelationships.ADMIN
-    ];
+  async listUsers(object: AuthorizationParty, relations: AuthorizationRelations[]): Promise<{ userId: string; relations: string[] }[]> {
 
     const responses = await Promise.all(
       relations.map(async (relation) => {
@@ -97,7 +92,7 @@ export class AuthorizationService {
     return aggregatedUsers;
   }
 
-  async addRelationship(user: AuthorizationParty, object: AuthorizationParty, relationship: AuthorizationRelationships): Promise<void> {
+  async addRelationship(user: AuthorizationParty, object: AuthorizationParty, relationship: AuthorizationRelations): Promise<void> {
     const tupleKey: TupleKey = {
       user: user.toOpenFgaString(),
       relation: relationship,
@@ -109,7 +104,7 @@ export class AuthorizationService {
     });
   }
 
-  async removeRelationship(user: AuthorizationParty, object: AuthorizationParty, relationship: AuthorizationRelationships): Promise<void> {
+  async removeRelationship(user: AuthorizationParty, object: AuthorizationParty, relationship: AuthorizationRelations): Promise<void> {
     const tupleKey: TupleKey = {
       user: user.toOpenFgaString(),
       relation: relationship,

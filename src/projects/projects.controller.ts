@@ -16,7 +16,7 @@ import { ProjectsService } from './projects.service';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { AuthorizationParty } from '../authorization/authorization-party';
 import { AuthorizationPartyTypes } from '../authorization/authorization-types.enum';
-import { AuthorizationRelationships } from '../authorization/authorization-relationships.enum';
+import { AuthorizationRelations } from '../authorization/authorization-relations.enum';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { User } from 'src/auth/user.decorator';
 import { AddProjectMemberDto } from './dto/add-project-member.dto';
@@ -46,7 +46,7 @@ export class ProjectsController {
     const projectIds = await this.authorizationService.listObjectIds(
       user,
       AuthorizationPartyTypes.PROJECT,
-      AuthorizationRelationships.MEMBER,
+      AuthorizationRelations.MEMBER,
     );
     const projects = await this.projectsService.findAll(projectIds);
     return projects.map((project) => ProjectDto.fromDocument(project));
@@ -58,7 +58,7 @@ export class ProjectsController {
   @Get(':id')
   @ApiOkResponse({ type: ProjectDto })
   @Permissions({
-    permission: AuthorizationRelationships.MEMBER,
+    permission: AuthorizationRelations.MEMBER,
     objectType: 'project',
     objectIdParam: 'id',
   })
@@ -81,7 +81,7 @@ export class ProjectsController {
     await this.authorizationService.addRelationship(
       user,
       object,
-      AuthorizationRelationships.OWNER,
+      AuthorizationRelations.OWNER,
     );
 
     return ProjectDto.fromDocument(project);
@@ -93,7 +93,7 @@ export class ProjectsController {
   @Get(':id/members')
   @ApiOkResponse({ type: String, isArray: true })
   @Permissions({
-    permission: AuthorizationRelationships.MEMBER,
+    permission: AuthorizationRelations.MEMBER,
     objectType: AuthorizationPartyTypes.PROJECT,
     objectIdParam: 'id',
   })
@@ -102,7 +102,12 @@ export class ProjectsController {
       AuthorizationPartyTypes.PROJECT,
       projectId,
     );
-    return (await this.authorizationService.listUsers(project)).map(
+    const relations = [
+      AuthorizationRelations.MEMBER,
+      AuthorizationRelations.OWNER,
+      AuthorizationRelations.ADMIN
+    ];
+    return (await this.authorizationService.listUsers(project, relations)).map(
       (user) => {
         return {
           userId: user.userId,
@@ -118,7 +123,7 @@ export class ProjectsController {
    */
   @Post(':id/members')
   @Permissions({
-    permission: AuthorizationRelationships.ADMIN,
+    permission: AuthorizationRelations.ADMIN,
     objectType: AuthorizationPartyTypes.PROJECT,
     objectIdParam: 'id',
   })
@@ -144,7 +149,7 @@ export class ProjectsController {
    */
   @Delete(':id/members')
   @Permissions({
-    permission: AuthorizationRelationships.ADMIN,
+    permission: AuthorizationRelations.ADMIN,
     objectType: AuthorizationPartyTypes.PROJECT,
     objectIdParam: 'id',
   })

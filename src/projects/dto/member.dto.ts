@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose } from "class-transformer";
-import { AuthorizationRelationships } from "src/authorization/authorization-relationships.enum";
+import { AuthorizationRelations } from "src/authorization/authorization-relations.enum";
 import { Auth } from "typeorm";
 
 @Exclude()
